@@ -30,21 +30,27 @@ class RestockWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        try {
+        return try {
             Log.d("WorkManager", "Worker starting execution")
 
-            val restockItem = shoppingHistoryRepository.checkForRestock()
-            Log.d("WorkManager", restockItem)
-            if (restockItem.isNotBlank()) {
-                createNotificationChannel()
-                showNotification(restockItem)
+            when (val restockResult = shoppingHistoryRepository.checkForRestock()) {
+                is com.abhay.voicecommandshoppinglist.domain.util.Result.Success -> {
+                    val restockItem = restockResult.data ?: ""
+                    if (restockItem.isNotBlank()) {
+                        createNotificationChannel()
+                        showNotification(restockItem)
+                    }
+                    Log.d("WorkManager", "Worker completed successfully")
+                    Result.success()
+                }
+                is com.abhay.voicecommandshoppinglist.domain.util.Result.Error -> {
+                    Log.e("WorkManager", "Worker failed: ${restockResult.message}")
+                    Result.failure()
+                }
             }
-
-            Log.d("WorkManager", "Worker completed successfully")
-            return Result.success()
         } catch (e: Exception) {
-            Log.e("WorkManager", "Worker failed", e)
-            return Result.failure()
+            Log.e("WorkManager", "Worker failed with exception", e)
+            Result.failure()
         }
     }
 

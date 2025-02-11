@@ -7,6 +7,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import com.abhay.voicecommandshoppinglist.domain.util.Result
 
 class NLPProcessor {
 
@@ -15,15 +16,20 @@ class NLPProcessor {
     private val apiKey = "Bearer ${BuildConfig.HUGGING_FACE_API_KEY}"
     private val labels = listOf("AddItem", "RemoveItem", "Unknown")
 
-    fun processText(userInput: String): String {
-        val requestBody = createRequestBody(userInput)
-        val request = buildRequest(requestBody)
-
+    fun processText(userInput: String): Result<String> {
         return try {
+            val requestBody = createRequestBody(userInput)
+            val request = buildRequest(requestBody)
             val response = client.newCall(request).execute()
-            handleResponse(response, userInput)
+
+            if (!response.isSuccessful) {
+                return Result.Error("API request failed with code: ${response.code}")
+            }
+
+            val processedText = handleResponse(response, userInput)
+            Result.Success(processedText)
         } catch (e: Exception) {
-            "Error processing text: ${e.message}"
+            Result.Error("Failed to process text: ${e.message}")
         }
     }
 

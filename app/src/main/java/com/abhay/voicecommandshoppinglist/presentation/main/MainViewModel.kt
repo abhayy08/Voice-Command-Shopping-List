@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.abhay.voicecommandshoppinglist.domain.util.Result
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -39,12 +40,19 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            shoppListUseCase.getShoppingList().collect { items ->
-                _uiState.update { it.copy(shoppingList = items) }
+            shoppListUseCase.getShoppingList().collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        _uiState.update { it.copy(shoppingList = result.data ?: emptyList()) }
+                    }
+                    is Result.Error -> {
+                        showSnackbar(result.message ?: "Unknown error occurred")
+                    }
+                }
             }
         }
-
     }
+
 
     private fun showSnackbar(message: String) {
         viewModelScope.launch {
@@ -72,19 +80,40 @@ class MainViewModel @Inject constructor(
 
     fun deleteAllItems() {
         viewModelScope.launch {
-            shoppListUseCase.deleteAllItems()
+            when (val result = shoppListUseCase.deleteAllItems()) {
+                is Result.Success -> {
+                    showSnackbar("Successfully cleared shopping list")
+                }
+                is Result.Error -> {
+                    showSnackbar(result.message ?: "Failed to clear shopping list")
+                }
+            }
         }
     }
 
     private fun addItem(itemName: String, quantity: Int) {
         viewModelScope.launch {
-            shoppListUseCase.addItem(itemName, quantity)
+            when (val result = shoppListUseCase.addItem(itemName, quantity)) {
+                is Result.Success -> {
+                    showSnackbar("Successfully added $quantity $itemName")
+                }
+                is Result.Error -> {
+                    showSnackbar(result.message ?: "Failed to add item")
+                }
+            }
         }
     }
 
     private fun removeItem(itemName: String) {
         viewModelScope.launch {
-            shoppListUseCase.deleteItem(itemName)
+            when (val result = shoppListUseCase.deleteItem(itemName)) {
+                is Result.Success -> {
+                    showSnackbar("Successfully removed $itemName")
+                }
+                is Result.Error -> {
+                    showSnackbar(result.message ?: "Failed to remove item")
+                }
+            }
         }
     }
 
@@ -97,9 +126,9 @@ class MainViewModel @Inject constructor(
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             speechRecognitionUseCase.startListening { text ->
-                _recognizedText.value = text
+                _recognizedText.value = text.data!!
                 Log.d("SpeechRecognitionViewModel", "Recognized text: $text")
-                handleIntent(text)
+                handleIntent(text.data!!)
             }
         } else {
             showSnackbar("You need to grant permission to record audio")
