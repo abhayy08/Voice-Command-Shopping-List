@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import com.abhay.voicecommandshoppinglist.domain.util.Result
 import com.abhay.voicecommandshoppinglist.domain.model.SpeechRecognitionService
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,8 +29,7 @@ class SpeechRecognitionServiceImpl @Inject constructor(
     override fun startListening(listener: (Result<String>) -> Unit) {
         try {
             if (speechRecognizer == null) {
-                listener(Result.Error("Failed to create speech recognizer"))
-                return
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
             }
 
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -43,16 +43,13 @@ class SpeechRecognitionServiceImpl @Inject constructor(
                 override fun onError(error: Int) {
                     val errorMessage = when (error) {
                         SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
-                        SpeechRecognizer.ERROR_CLIENT -> "Client side error"
-                        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
-                        SpeechRecognizer.ERROR_NETWORK -> "Network error"
-                        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
+                        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions. Make sure you have granted the required permissions"
                         SpeechRecognizer.ERROR_NO_MATCH -> "No speech input"
                         SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Recognition service busy"
-                        SpeechRecognizer.ERROR_SERVER -> "Server error"
                         SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
                         else -> "Unknown error: $error"
                     }
+                    Log.d("SpeechRecognition", "Error: $errorMessage")
                     listener(Result.Error(errorMessage))
                 }
 
@@ -93,8 +90,7 @@ class SpeechRecognitionServiceImpl @Inject constructor(
     override fun stopListening(): Result<Unit> {
         return try {
             speechRecognizer?.stopListening()
-            speechRecognizer?.destroy()
-            speechRecognizer = null
+
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error("Failed to stop speech recognition: ${e.message}")

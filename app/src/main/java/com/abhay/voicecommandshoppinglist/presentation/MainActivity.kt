@@ -36,7 +36,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-
             VoiceCommandShoppingListTheme {
                 MainScreen(
                     viewModel = viewModel

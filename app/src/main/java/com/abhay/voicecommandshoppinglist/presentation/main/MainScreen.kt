@@ -13,9 +13,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ClearAll
 import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material.icons.rounded.MicOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -24,7 +26,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
@@ -43,7 +47,7 @@ import com.abhay.voicecommandshoppinglist.presentation.ui.theme.VoiceCommandShop
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    modifier: Modifier = Modifier, viewModel: MainViewModel
+    viewModel: MainViewModel
 ) {
 
     val state = viewModel.uiState.collectAsState()
@@ -62,24 +66,42 @@ fun MainScreen(
         }
     }
 
-    Scaffold(modifier = modifier
-        .fillMaxSize()
-        .nestedScroll(scrollBehavior.nestedScrollConnection),
-        floatingActionButton = {
-            VoiceCommandFab(onClick = { viewModel.startListening() })
-        },
-        topBar = { VoiceCommandTopAppBar(scrollBehavior, viewModel::deleteAllItems) },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            items(state.value.shoppingList) { listItem ->
-                ShoppingListItem(item = listItem)
+            Scaffold(modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                floatingActionButton = {
+                    VoiceCommandFab(
+                        startListeningClick = viewModel::startListening,
+                        stopListeningClick = viewModel::stopListening,
+                        isListening = state.value.isListening
+                    )
+                },
+                topBar = { VoiceCommandTopAppBar(scrollBehavior, viewModel::deleteAllItems) },
+                snackbarHost = { SnackbarHost(snackbarHostState) }
+
+            ) { paddingValues ->
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(state.value.shoppingList) { listItem ->
+                        ShoppingListItem(item = listItem)
+                    }
+                }
+            }
+            if (state.value.isLoading) {
+                LoadingStateOverlay(
+                    message = state.value.loadingMessage
+                )
             }
         }
     }
@@ -96,8 +118,36 @@ fun VoiceCommandTopAppBar(
         IconButton(onClick = onClearListClick) {
             Icon(imageVector = Icons.Rounded.ClearAll, contentDescription = "Clear List")
         }
-    }, scrollBehavior = scrollBehavior
+    }, scrollBehavior = scrollBehavior,
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+private fun asdasd() {
+    VoiceCommandShoppingListTheme {
+        VoiceCommandTopAppBar(scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()), onClearListClick = {})
+    }
+}
+
+@Composable
+fun VoiceCommandFab(
+    startListeningClick: () -> Unit,
+    stopListeningClick: () -> Unit,
+    isListening: Boolean
+) {
+    FloatingActionButton(
+        onClick = { if (isListening) stopListeningClick() else startListeningClick() }
+    ) {
+        Icon(
+            imageVector = if (isListening) Icons.Rounded.MicOff else Icons.Rounded.Mic,
+            contentDescription = if (isListening) "Stop Listening" else "Start Listening"
+        )
+    }
 }
 
 @Composable
@@ -145,15 +195,6 @@ fun ShoppingListItem(
     }
 }
 
-
-@Composable
-fun VoiceCommandFab(
-    onClick: () -> Unit
-) {
-    FloatingActionButton(onClick = onClick) {
-        Icon(imageVector = Icons.Rounded.Mic, contentDescription = "Start Listening for command")
-    }
-}
 
 @Preview(
     showBackground = true
