@@ -70,7 +70,7 @@ class RestockWorker @AssistedInject constructor(
 
     private fun showNotification(restockItem: String) {
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Restock Reminder")
             .setContentText("Maybe you need to restock on $restockItem ?")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
