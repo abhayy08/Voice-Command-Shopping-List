@@ -102,9 +102,10 @@ Voice-Command-Shopping-List/
 
 ## Screenshots
 
-![VoiceCommandShoppingList .jpg](VoiceCommandShoppingList_.jpg)
-
-![VoiceCommandShoppingList  (4).jpg](VoiceCommandShoppingList__(4).jpg)
+<p align="center">
+  <img src="VoiceCommandShoppingList_.jpg" width="45%" />
+  <img src="VoiceCommandShoppingList__(4).jpg" width="45%" />
+</p>
 
 ## Usage
 
