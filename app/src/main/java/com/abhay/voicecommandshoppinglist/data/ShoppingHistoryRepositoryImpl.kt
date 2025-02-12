@@ -27,7 +27,7 @@ class ShoppingHistoryRepositoryImpl @Inject constructor(private val dao: Shoppin
 
     override suspend fun checkForRestock(): Result<String> {
         return try {
-            val RESTOCK_THRESHOLD = 7 * 24 * 60 * 60 * 1000L
+            val RESTOCK_THRESHOLD = 4 * 24 * 60 * 60 * 1000L
             val thresholdTime = System.currentTimeMillis() - RESTOCK_THRESHOLD
             val item = dao.getRestockSuggestions(thresholdTime)
             Result.Success(item?.let { "Consider restocking: $it" } ?: "")

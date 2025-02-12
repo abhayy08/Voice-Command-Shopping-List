@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.capitalize
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -72,7 +74,7 @@ class MainViewModel @Inject constructor(
 
     private fun handleIntent(input: String) {
         val intent = input.substringAfter("Intent: ").substringBefore(",").trim()
-        val item = input.substringAfter("Extracted Item: ").substringBefore(", Quantity:").trim()
+        val item = input.substringAfter("Extracted Item: ").substringBefore(", Quantity:").trim().capitalizeFirstChar()
         val quantity = input.substringAfter("Quantity: ").trim()
 
         when (intent) {
@@ -160,6 +162,10 @@ class MainViewModel @Inject constructor(
 
     fun stopListening() {
         speechRecognitionUseCase.stopListening()
+    }
+
+    fun String.capitalizeFirstChar() = replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
     }
 
     sealed class UiEvent {

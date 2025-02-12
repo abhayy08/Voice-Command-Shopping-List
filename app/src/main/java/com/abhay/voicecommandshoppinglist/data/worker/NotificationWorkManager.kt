@@ -14,25 +14,18 @@ class NotificationWorkManager @Inject constructor(
 ) {
 
     fun scheduleNotification() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-            .setRequiresBatteryNotLow(true)
-            .build()
+        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+            .setRequiresBatteryNotLow(true).build()
 
         val request = PeriodicWorkRequestBuilder<RestockWorker>(
             3, TimeUnit.DAYS
-        )
-            .setConstraints(constraints)
-            .build()
+        ).setConstraints(constraints).build()
 
         workManager.enqueueUniquePeriodicWork(
-            "restock_notification_work",
-            ExistingPeriodicWorkPolicy.KEEP,
-            request
+            "restock_notification_work", ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE, request
         )
 
-        workManager.getWorkInfoByIdLiveData(request.id)
-            .observeForever { workInfo ->
+        workManager.getWorkInfoByIdLiveData(request.id).observeForever { workInfo ->
                 Log.d("WorkManager", "Work status: ${workInfo?.state}")
             }
     }
